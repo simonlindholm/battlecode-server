@@ -524,7 +524,7 @@ public final class TeamClassLoaderFactory {
                     checkDisallowed,
                     debugMethodsEnabled
             );
-            reader.accept(cv, 0);        //passing false lets debug info be included in the transformation, so players get line numbers in stack traces
+            reader.accept(cv, ClassReader.SKIP_DEBUG);
             return cw.toByteArray();
         }
 
