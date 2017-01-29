@@ -520,6 +520,19 @@ public final strictfp class RobotControllerImpl implements RobotController {
                     "Cannot move to the target location " + loc +".");
     }
 
+    private MapLocation clampMovement(MapLocation center) {
+        float dist = getLocation().distanceTo(center);
+        if(dist <= getType().strideRadius) {
+            return center;
+        }
+        // (As a performance optimization, we do this manually instead of
+        // using directionTo.)
+        float dx = center.x - getLocation().x;
+        float dy = center.y - getLocation().y;
+        float scale = getType().strideRadius / dist;
+        return getLocation().translate(dx * scale, dy * scale);
+    }
+
     @Override
     public boolean canMove(Direction dir) {
         return canMove(dir, getType().strideRadius);
@@ -536,11 +549,7 @@ public final strictfp class RobotControllerImpl implements RobotController {
     @Override
     public boolean canMove(MapLocation center) {
         assertNotNull(center);
-        float dist = getLocation().distanceTo(center);
-        if(dist > getType().strideRadius) {
-            Direction dir = getLocation().directionTo(center);
-            center = getLocation().add(dir, getType().strideRadius);
-        }
+        center = clampMovement(center);
         boolean newLocationIsEmpty;
         if(getType() != RobotType.TANK && getType() != RobotType.SCOUT) {
             newLocationIsEmpty = gameWorld.getObjectInfo().isEmptyExceptForRobot(center, getType().bodyRadius, robot);
@@ -569,11 +578,7 @@ public final strictfp class RobotControllerImpl implements RobotController {
     public void move(MapLocation center) throws GameActionException {
         assertNotNull(center);
         assertMoveReady();
-        float dist = getLocation().distanceTo(center);
-        if(dist > getType().strideRadius) {
-            Direction dir = getLocation().directionTo(center);
-            center = getLocation().add(dir, getType().strideRadius);
-        }
+        center = clampMovement(center);
         assertCanMove(center);
         
         this.robot.incrementMoveCount();
